@@ -7,6 +7,7 @@ class App extends React.Component {
     super();
     this.fetchApi = this.fetchApi.bind(this);
     this.nextDoguinho = this.nextDoguinho.bind(this);
+    this.addLocalStorage = this.addLocalStorage.bind(this);
     this.state = {
       loading: true,
       imagem: '',
@@ -17,12 +18,31 @@ class App extends React.Component {
     this.fetchApi(apiUrl);
   }
 
-  // componentDidUpdate() {
-  //   this.fetchApi(apiUrl);
-  // }
+  shouldComponentUpdate(_nextProps, nextState) {
+    if (nextState.imagem.includes('terrier')) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  componentDidUpdate() {
+    const { loading, imagem } = this.state;
+    const race = imagem.split('/')[4];
+    this.addLocalStorage();
+    if (loading === false) alert(race);
+  }
+
+  addLocalStorage() {
+    if (localStorage.length !== 0) localStorage.removeItem('url');
+    localStorage.setItem('url', this.state.imagem);
+  }
 
   fetchApi(api) {
-    fetch(api).then((r) => r.json()).then((r) => this.setState({ loading: false, imagem: r.message }));
+    fetch(api).then((r) => r.json()).then((r) => this.setState({
+      loading: false,
+      imagem: r.message
+    }));
   }
 
   nextDoguinho() {
