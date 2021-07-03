@@ -8,34 +8,41 @@ class App extends React.Component {
     this.fetchApi = this.fetchApi.bind(this);
     this.nextDoguinho = this.nextDoguinho.bind(this);
     this.addLocalStorage = this.addLocalStorage.bind(this);
+    this.clearLocalStorage = this.clearLocalStorage.bind(this);
+    this.handleNameChange = this.handleNameChange.bind(this);
+    this.storeDoguinho = this.storeDoguinho.bind(this);
     this.state = {
       loading: true,
       imagem: '',
+      name: '',
+      array: [],
     };
   }
 
   componentDidMount() {
-    this.fetchApi(apiUrl);
+    if (localStorage.length !==0) {
+      const previousDog = JSON.parse(localStorage.getItem('dog'));
+      this.setState({ loading: false, imagem: previousDog[0], array: previousDog });
+    } else {
+      this.fetchApi(apiUrl);
+    }
   }
 
   shouldComponentUpdate(_nextProps, nextState) {
     if (nextState.imagem.includes('terrier')) {
       return false;
-    } else {
-      return true;
     }
+    return true;
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(_prevProps, prevState) {
     const { loading, imagem } = this.state;
     const race = imagem.split('/')[4];
-    this.addLocalStorage();
-    if (loading === false) alert(race);
+    if (loading === false && prevState.loading !== this.state.loading) alert(race);
   }
 
   addLocalStorage() {
-    if (localStorage.length !== 0) localStorage.removeItem('url');
-    localStorage.setItem('url', this.state.imagem);
+    localStorage.setItem('dog', JSON.stringify(this.state.array));
   }
 
   fetchApi(api) {
@@ -50,14 +57,34 @@ class App extends React.Component {
       () => this.fetchApi(apiUrl));
   }
 
+  handleNameChange({ target }) {
+    this.setState({ name: target.value });
+  }
+
+  storeDoguinho() {
+    const { imagem, name } = this.state;
+    this.setState({ array: [imagem, name] },
+      () => this.addLocalStorage());
+  }
+
+  clearLocalStorage() {
+    localStorage.clear();
+  }
+
   render() {
-    const { loading, imagem } = this.state;
-    if (loading === true) return <p>Loading...</p>
+    const { loading, imagem, name } = this.state;
+    if (loading) return <p>Loading...</p>
     return (
       <div>
         <h1>Doguinho!</h1>
         <img src={ imagem } alt='doguinho' />
         <button type='button' onClick={ this.nextDoguinho }>Próximo doguinho!</button>
+        <label>
+          Nome do doguinho:
+          <input type='text' value={ name } onChange={ this.handleNameChange } />
+          <button type='button' onClick={ this.storeDoguinho }>Guardar doguinho</button>
+          <button type='button' onClick={ this.clearLocalStorage }>Limpar armazenamento</button>
+        </label>
       </div>
     );
   }
